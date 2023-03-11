@@ -23,11 +23,10 @@ struct Args {
 fn main() -> Result<(), Box<dyn Error>> {
     let args = Args::parse();
 
-    let ipcon = IpConnection::new(); // Create IP connection.
-    let oled = Oled128x64V2Bricklet::new(&args.uid, &ipcon); // Create device object.
+    let ip_connection = IpConnection::new();
+    let oled = Oled128x64V2Bricklet::new(&args.uid, &ip_connection); // Create device object.
 
-    ipcon.connect((args.host, args.port)).recv()??; // Connect to brickd.
-                                                    // Don't use device before ipcon is connected.
+    ip_connection.connect((args.host, args.port)).recv()??;
     let _ = oled.clear_display().recv();
 
     let file = File::open(args.path)?;
@@ -46,7 +45,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     println!("Press enter to exit.");
     let mut _input = String::new();
     io::stdin().read_line(&mut _input)?;
-    ipcon.disconnect();
+    ip_connection.disconnect();
 
     Ok(())
 }
