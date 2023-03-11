@@ -1,7 +1,9 @@
+use std::time::Duration;
 use std::{
     error::Error,
     fs::{self, File},
     io::{self, BufReader, Read},
+    thread,
 };
 
 use clap::Parser;
@@ -37,7 +39,13 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     let parts = contents.split('\n').collect::<Vec<_>>();
     for (index, part) in parts.iter().enumerate() {
-        let line = index as u8;
+        //clear screen function
+        if index % 8 == 0 {
+            thread::sleep(Duration::from_millis(500));
+            let _ = oled.clear_display().recv();
+        }
+        let line = (index % 8) as u8;
+
         println!("{} {}", line, part);
         oled.write_line(line, 0, part.to_string());
     }
