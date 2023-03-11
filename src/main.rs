@@ -74,6 +74,11 @@ fn split_at(text: &str, index: usize) -> Vec<&str> {
     let mut current = text;
 
     while !current.is_empty() {
+        if current.len() < index {
+            list.push(current);
+            break;
+        }
+
         let (head, rest) = current.split_at(index);
         list.push(head);
 
