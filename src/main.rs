@@ -1,25 +1,51 @@
-use std::{error::Error, io, fs};
+use std::{
+    error::Error,
+    fs::{self, File},
+    io::{self, BufReader, Read},
+};
 
+use clap::Parser;
 use tinkerforge::{ip_connection::IpConnection, oled_128x64_v2_bricklet::*};
-const HOST: &str = "localhost";
-const PORT: u16 = 4223;
-const UID: &str = "Hit"; // Change XYZ to the UID of your OLED 128x64 Bricklet 2.0.
+
+#[derive(Parser, Debug)]
+#[command(author, version, about, long_about = None)]
+struct Args {
+    #[arg(short, long)]
+    host: String,
+    #[arg(short, long)]
+    port: u16,
+    #[arg(short, long)]
+    uid: String,
+    #[arg(short, long)]
+    path: String,
+}
 
 fn main() -> Result<(), Box<dyn Error>> {
-    let ipcon = IpConnection::new(); // Create IP connection.
-    let oled = Oled128x64V2Bricklet::new(UID, &ipcon); // Create device object.
+    let args = Args::parse();
 
-    ipcon.connect((HOST, PORT)).recv()??; // Connect to brickd.
-                                          // Don't use device before ipcon is connected.
+    let ipcon = IpConnection::new(); // Create IP connection.
+    let oled = Oled128x64V2Bricklet::new(&args.uid, &ipcon); // Create device object.
+
+    ipcon.connect((args.host, args.port)).recv()??; // Connect to brickd.
+                                                    // Don't use device before ipcon is connected.
     let _ = oled.clear_display().recv();
 
-    let path = "./data/HelloWorld.txt";
-    let contents = fs::read_to_string(path)?;
-    let _ = oled.write_line(1, 0, contents);
+    let file = File::open(args.path)?;
+    let mut buf_reader = BufReader::new(file);
+
+    let mut contents = String::new();
+    buf_reader.read_to_string(&mut contents)?;
+
+    let parts = contents.split('\n').collect::<Vec<_>>();
+    for (index, part) in parts.iter().enumerate() {
+        let line = index as u8;
+        oled.write_line(line, 0, part.to_string());
+    }
 
     println!("Press enter to exit.");
     let mut _input = String::new();
     io::stdin().read_line(&mut _input)?;
     ipcon.disconnect();
+
     Ok(())
 }

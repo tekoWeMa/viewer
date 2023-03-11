@@ -7,3 +7,4 @@ edition = "2021"
 
 [dependencies]
 tinkerforge = "2.0.20"
+clap = {version = "4.1.*", features = ["unstable-doc"]}
