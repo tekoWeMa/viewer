@@ -50,7 +50,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                 thread::sleep(Duration::from_millis(1_000));
                 let _ = oled.clear_display().recv();
             } else {
-                thread::sleep(Duration::from_millis(250));
+                thread::sleep(Duration::from_millis(500));
             }
         })
         .collect::<Vec<_>>();
