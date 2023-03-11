@@ -1,7 +1,7 @@
 use std::{
     error::Error,
     fs::File,
-    io::{self, BufReader, Read},
+    io::{BufReader, Read},
     thread,
     time::Duration,
 };
@@ -38,29 +38,26 @@ fn main() -> Result<(), Box<dyn Error>> {
     buf_reader.read_to_string(&mut contents)?;
 
     let line_max_length = 21;
-    let texts = contents
+    let _texts = contents
         .split('\n')
         .flat_map(|part| split_at(part, line_max_length))
+        .enumerate()
+        .map(|(index, text)| ((index % 8) as u8, index % 8 == 0 && index != 0, text))
+        .inspect(|(index, is_new_line, text)| {
+            write_line(&oled, *index, text);
+
+            if *is_new_line {
+                thread::sleep(Duration::from_millis(1_000));
+                let _ = oled.clear_display().recv();
+            } else {
+                thread::sleep(Duration::from_millis(250));
+            }
+        })
         .collect::<Vec<_>>();
 
-    let mut counter: usize = 0;
-    for line_text in texts {
-        let line_index = (counter % 8) as u8;
-        write_line(&oled, line_index, line_text);
-
-        counter += 1;
-        if counter % 8 == 0 {
-            thread::sleep(Duration::from_millis(750));
-            let _ = oled.clear_display().recv();
-        }
-        thread::sleep(Duration::from_millis(250));
-    }
-
-    println!("Press enter to exit.");
-    let mut _input = String::new();
-    io::stdin().read_line(&mut _input)?;
     ip_connection.disconnect();
 
+    println!("Finished printing the output");
     Ok(())
 }
 
