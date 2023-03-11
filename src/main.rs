@@ -1,6 +1,6 @@
 use std::{
     error::Error,
-    fs::{self, File},
+    fs::File,
     io::{self, BufReader, Read},
     thread,
     time::Duration,
@@ -40,10 +40,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     let line_max_length = 21;
     let texts = contents
         .split('\n')
-        .iter()
-        .map(|part| split_at(part, line_max_length))
-        .into_iter()
-        .flatten()
+        .flat_map(|part| split_at(part, line_max_length))
         .collect::<Vec<_>>();
 
     let mut counter: usize = 0;
