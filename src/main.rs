@@ -37,24 +37,28 @@ fn main() -> Result<(), Box<dyn Error>> {
     let mut contents = String::new();
     buf_reader.read_to_string(&mut contents)?;
 
+    let line_max_length = 21;
     let parts = contents.split('\n').collect::<Vec<_>>();
-    for (index, part) in parts.iter().enumerate() {
-        let line_text = if part.len() > 21 {
-            part[..21].to_string()
-        }else {
-            part.to_string()
-        };
 
-        //clear screen function
-        if index % 8 == 0 {
-            thread::sleep(Duration::from_millis(1_000));
-            let _ = oled.clear_display().recv();
+    let mut counter: usize = 0;
+    let lines = parts
+        .iter()
+        .map(|part| split_at(part, line_max_length))
+        .collect::<Vec<_>>();
+    for line_texts in lines {
+        for line_text in line_texts {
+            let line_index = (counter % 8) as u8;
+
+            println!("{} {}", line_index, line_text);
+            let _ = oled.write_line(line_index, 0, line_text.to_string()).recv();
+
+            counter += 1;
+            if counter % 8 == 0 {
+                thread::sleep(Duration::from_millis(750));
+                let _ = oled.clear_display().recv();
+            }
+            thread::sleep(Duration::from_millis(250));
         }
-        let line_index = (index % 8) as u8;
-
-        println!("{} {}", line_index, line_text);
-        let _ = oled.write_line(line_index, 0, line_text).recv();
-        thread::sleep(Duration::from_millis(250));
     }
 
     println!("Press enter to exit.");
@@ -63,4 +67,18 @@ fn main() -> Result<(), Box<dyn Error>> {
     ip_connection.disconnect();
 
     Ok(())
+}
+
+fn split_at(text: &str, index: usize) -> Vec<&str> {
+    let mut list = vec![];
+    let mut current = text;
+
+    while !current.is_empty() {
+        let (head, rest) = current.split_at(index);
+        list.push(head);
+
+        current = rest;
+    }
+
+    list
 }
