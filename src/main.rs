@@ -39,15 +39,22 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     let parts = contents.split('\n').collect::<Vec<_>>();
     for (index, part) in parts.iter().enumerate() {
+        let line_text = if part.len() > 21 {
+            part[..21].to_string()
+        }else {
+            part.to_string()
+        };
+
         //clear screen function
         if index % 8 == 0 {
-            thread::sleep(Duration::from_millis(500));
+            thread::sleep(Duration::from_millis(1_000));
             let _ = oled.clear_display().recv();
         }
-        let line = (index % 8) as u8;
+        let line_index = (index % 8) as u8;
 
-        println!("{} {}", line, part);
-        oled.write_line(line, 0, part.to_string());
+        println!("{} {}", line_index, line_text);
+        let _ = oled.write_line(line_index, 0, line_text).recv();
+        thread::sleep(Duration::from_millis(250));
     }
 
     println!("Press enter to exit.");
