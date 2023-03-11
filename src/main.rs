@@ -44,14 +44,13 @@ fn main() -> Result<(), Box<dyn Error>> {
         .enumerate()
         .map(|(index, text)| ((index % 8) as u8, index % 8 == 0 && index != 0, text))
         .inspect(|(index, is_new_line, text)| {
-            write_line(&oled, *index, text);
-
             if *is_new_line {
                 thread::sleep(Duration::from_millis(1_000));
                 let _ = oled.clear_display().recv();
             } else {
                 thread::sleep(Duration::from_millis(500));
             }
+            write_line(&oled, *index, text);
         })
         .collect::<Vec<_>>();
 
