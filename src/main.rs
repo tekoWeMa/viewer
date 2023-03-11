@@ -1,9 +1,9 @@
-use std::time::Duration;
 use std::{
     error::Error,
     fs::{self, File},
     io::{self, BufReader, Read},
     thread,
+    time::Duration,
 };
 
 use clap::Parser;
@@ -38,27 +38,25 @@ fn main() -> Result<(), Box<dyn Error>> {
     buf_reader.read_to_string(&mut contents)?;
 
     let line_max_length = 21;
-    let parts = contents.split('\n').collect::<Vec<_>>();
-
-    let mut counter: usize = 0;
-    let lines = parts
+    let texts = contents
+        .split('\n')
         .iter()
         .map(|part| split_at(part, line_max_length))
+        .into_iter()
+        .flatten()
         .collect::<Vec<_>>();
-    for line_texts in lines {
-        for line_text in line_texts {
-            let line_index = (counter % 8) as u8;
 
-            println!("{} {}", line_index, line_text);
-            let _ = oled.write_line(line_index, 0, line_text.to_string()).recv();
+    let mut counter: usize = 0;
+    for line_text in texts {
+        let line_index = (counter % 8) as u8;
+        write_line(&oled, line_index, line_text);
 
-            counter += 1;
-            if counter % 8 == 0 {
-                thread::sleep(Duration::from_millis(750));
-                let _ = oled.clear_display().recv();
-            }
-            thread::sleep(Duration::from_millis(250));
+        counter += 1;
+        if counter % 8 == 0 {
+            thread::sleep(Duration::from_millis(750));
+            let _ = oled.clear_display().recv();
         }
+        thread::sleep(Duration::from_millis(250));
     }
 
     println!("Press enter to exit.");
@@ -67,6 +65,11 @@ fn main() -> Result<(), Box<dyn Error>> {
     ip_connection.disconnect();
 
     Ok(())
+}
+
+fn write_line(oled: &Oled128x64V2Bricklet, line_index: u8, line_text: &str) {
+    println!("{} {}", line_index, line_text);
+    let _ = oled.write_line(line_index, 0, line_text.to_string()).recv();
 }
 
 fn split_at(text: &str, index: usize) -> Vec<&str> {
