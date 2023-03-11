@@ -39,6 +39,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     let parts = contents.split('\n').collect::<Vec<_>>();
     for (index, part) in parts.iter().enumerate() {
         let line = index as u8;
+        println!("{} {}", line, part);
         oled.write_line(line, 0, part.to_string());
     }
 
